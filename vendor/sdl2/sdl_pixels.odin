@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -13,6 +15,7 @@ ALPHA_TRANSPARENT ::   0
 
 PIXELTYPE_UNKNOWN  ::  0
 PIXELTYPE_INDEX1   ::  1
+PIXELTYPE_INDEX2   :: 12
 PIXELTYPE_INDEX4   ::  2
 PIXELTYPE_INDEX8   ::  3
 PIXELTYPE_PACKED8  ::  4
@@ -82,6 +85,7 @@ DEFINE_PIXELFORMAT :: #force_inline proc "c" (type: u8, order: u8, layout, bits,
 // #define SDL_ISPIXELFORMAT_INDEXED(format)   \
 //     (!SDL_ISPIXELFORMAT_FOURCC(format) && \
 //      ((SDL_PIXELTYPE(format) == PIXELTYPE_INDEX1) || \
+//       (SDL_PIXELTYPE(format) == PIXELTYPE_INDEX2) || \
 //       (SDL_PIXELTYPE(format) == PIXELTYPE_INDEX4) || \
 //       (SDL_PIXELTYPE(format) == PIXELTYPE_INDEX8)))
 
@@ -120,6 +124,8 @@ PixelFormatEnum :: enum u32 {
 	UNKNOWN = 0,
 	INDEX1LSB   = 1<<28 | PIXELTYPE_INDEX1<<24   | BITMAPORDER_4321<<20 | 0<<16 | 1<<8 | 0<<0,
 	INDEX1MSB   = 1<<28 | PIXELTYPE_INDEX1<<24   | BITMAPORDER_1234<<20 | 0<<16 | 1<<8 | 0<<0,
+	INDEX2LSB   = 1<<28 | PIXELTYPE_INDEX2<<24   | BITMAPORDER_4321<<20 | 0<<16 | 2<<8 | 0<<0,
+	INDEX2MSB   = 1<<28 | PIXELTYPE_INDEX2<<24   | BITMAPORDER_1234<<20 | 0<<16 | 2<<8 | 0<<0,
 	INDEX4LSB   = 1<<28 | PIXELTYPE_INDEX4<<24   | BITMAPORDER_4321<<20 | 0<<16 | 4<<8 | 0<<0,
 	INDEX4MSB   = 1<<28 | PIXELTYPE_INDEX4<<24   | BITMAPORDER_1234<<20 | 0<<16 | 4<<8 | 0<<0,
 	INDEX8      = 1<<28 | PIXELTYPE_INDEX8<<24   | 0<<20                | 0<<16 | 8<<8 | 1<<0,
@@ -161,6 +167,10 @@ PixelFormatEnum :: enum u32 {
 	ARGB32 = ARGB8888 when ODIN_ENDIAN == .Big else BGRA8888,
 	BGRA32 = BGRA8888 when ODIN_ENDIAN == .Big else ARGB8888,
 	ABGR32 = ABGR8888 when ODIN_ENDIAN == .Big else RGBA8888,
+	RGBX32 = RGBX8888 when ODIN_ENDIAN == .Big else XBGR8888,
+	XRGB32 = XRGB8888 when ODIN_ENDIAN == .Big else BGRX8888,
+	BGRX32 = BGRX8888 when ODIN_ENDIAN == .Big else XRGB8888,
+	XBGR32 = XBGR8888 when ODIN_ENDIAN == .Big else RGBX8888,
 
 	YV12 =      /**< Planar mode: Y + V + U  (3 planes) */
 		'Y'<<0 | 'V'<<8 | '1'<<16 | '2'<<24,

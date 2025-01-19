@@ -10,12 +10,12 @@ when ODIN_OS == .Windows {
 	foreign import lib "system:SDL2"
 }
 
-MetalView :: distinct rawptr
+GUID :: struct {
+	data: [16]u8,
+}
 
 @(default_calling_convention="c", link_prefix="SDL_")
 foreign lib {
-	Metal_CreateView      :: proc(window: ^Window) -> MetalView ---
-	Metal_DestroyView     :: proc(view: MetalView) ---
-	Metal_GetLayer        :: proc(view: MetalView) -> rawptr ---
-	Metal_GetDrawableSize :: proc(window: ^Window, w, h: ^c.int) ---
+	GUIDToString        :: proc(guid: GUID, pszGUID: [^]u8, cbGUID: c.int) ---
+	GUIDFromString      :: proc(pchGUID: cstring) -> GUID ---
 }

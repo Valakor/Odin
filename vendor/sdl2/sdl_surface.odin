@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -72,9 +74,9 @@ BlitScaled  :: UpperBlitScaled
 @(default_calling_convention="c", link_prefix="SDL_")
 foreign lib {
 	CreateRGBSurface                  :: proc(flags: u32, width, height, depth: c.int, Rmask, Gmask, Bmask, Amask: u32) -> ^Surface ---
-	CreateRGBSurfaceWithFormat        :: proc(flags: u32, width, height, depth: c.int, format: u32) -> ^Surface ---
+	CreateRGBSurfaceWithFormat        :: proc(flags: u32, width, height, depth: c.int, format: PixelFormatEnum) -> ^Surface ---
 	CreateRGBSurfaceFrom              :: proc(pixels: rawptr, width, height, depth, pitch: c.int, Rmask, Gmask, Bmask, Amask: u32) -> ^Surface ---
-	CreateRGBSurfaceWithFormatFrom    :: proc(pixels: rawptr, width, height, depth, pitch: c.int, format: u32) -> ^Surface ---
+	CreateRGBSurfaceWithFormatFrom    :: proc(pixels: rawptr, width, height, depth, pitch: c.int, format: PixelFormatEnum) -> ^Surface ---
 	FreeSurface                       :: proc(surface: ^Surface) ---
 	SetSurfacePalette                 :: proc(surface: ^Surface, palette: ^Palette) -> c.int ---
 	LockSurface                       :: proc(surface: ^Surface) -> c.int ---
@@ -96,8 +98,9 @@ foreign lib {
 	GetClipRect                       :: proc(surface: ^Surface, rect: ^Rect) ---
 	DuplicateSurface                  :: proc(surface: ^Surface) -> ^Surface ---
 	ConvertSurface                    :: proc(src: ^Surface, fmt: ^PixelFormat, flags: u32) -> ^Surface ---
-	ConvertSurfaceFormat              :: proc(src: ^Surface, pixel_format: u32, flags: u32) -> ^Surface ---
-	ConvertPixels                     :: proc(width, height: c.int, src_format: u32, src: rawptr, src_pitch: c.int, dst_format: u32, dst: rawptr, dst_pitch: c.int) -> c.int ---
+	ConvertSurfaceFormat              :: proc(src: ^Surface, pixel_format: PixelFormatEnum, flags: u32) -> ^Surface ---
+	ConvertPixels                     :: proc(width, height: c.int, src_format: PixelFormatEnum, src: rawptr, src_pitch: c.int, dst_format: PixelFormatEnum, dst: rawptr, dst_pitch: c.int) -> c.int ---
+	PremultiplyAlpha                  :: proc(width, height: c.int, src_format: PixelFormatEnum, src: rawptr, src_pitch: c.int, dst_format: PixelFormatEnum, dst: rawptr, dst_pitch: c.int) -> c.int ---
 	FillRect                          :: proc(dst: ^Surface, rect: ^Rect, color: u32) -> c.int ---
 	FillRects                         :: proc(dst: ^Surface, rects: [^]Rect, count: c.int, color: u32) -> c.int ---
 	UpperBlit                         :: proc(src: ^Surface, srcrect: ^Rect, dst: ^Surface, dstrect: ^Rect) -> c.int ---

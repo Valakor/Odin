@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -85,13 +87,13 @@ AudioCallback :: proc "c" (userdata: rawptr, stream: [^]u8, len: c.int)
  *  The calculated values in this structure are calculated by SDL_OpenAudio().
  *
  *  For multi-channel audio, the default SDL channel mapping is:
- *  2:  FL FR                       (stereo)
- *  3:  FL FR LFE                   (2.1 surround)
- *  4:  FL FR BL BR                 (quad)
- *  5:  FL FR FC BL BR              (quad + center)
- *  6:  FL FR FC LFE SL SR          (5.1 surround - last two can also be BL BR)
- *  7:  FL FR FC LFE BC SL SR       (6.1 surround)
- *  8:  FL FR FC LFE BL BR SL SR    (7.1 surround)
+ *  2:  FL  FR                          (stereo)
+ *  3:  FL  FR LFE                      (2.1 surround)
+ *  4:  FL  FR  BL  BR                  (quad)
+ *  5:  FL  FR LFE  BL  BR              (4.1 surround)
+ *  6:  FL  FR  FC LFE  SL  SR          (5.1 surround - last two can also be BL BR)
+ *  7:  FL  FR  FC LFE  BC  SL  SR      (6.1 surround)
+ *  8:  FL  FR  FC LFE  BL  BR  SL  SR  (7.1 surround)
  */
 AudioSpec :: struct {
 	freq:     c.int,         /**< DSP frequency -- samples per second */
@@ -144,6 +146,8 @@ foreign lib {
 
 	GetAudioDeviceName :: proc(index: c.int, iscapture: bool) -> cstring ---
 	GetAudioDeviceSpec :: proc(index: c.int, iscapture: bool, spec: ^AudioSpec) -> c.int ---
+
+	GetDefaultAudioInfo :: proc(name: ^cstring, spec: ^AudioSpec, iscapture: c.int) -> c.int ---
 
 	OpenAudioDevice :: proc(device: cstring,
 	                        iscapture: bool,

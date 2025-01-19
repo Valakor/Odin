@@ -27,6 +27,8 @@ import "base:intrinsics"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -38,8 +40,8 @@ version :: struct {
 }
 
 MAJOR_VERSION   :: 2
-MINOR_VERSION   :: 0
-PATCHLEVEL      :: 16
+MINOR_VERSION   :: 30
+PATCHLEVEL      :: 11
 
 VERSION :: proc "contextless" (ver: ^version) {
 	ver.major = MAJOR_VERSION
@@ -128,6 +130,9 @@ foreign lib {
 	SetClipboardText :: proc(text: cstring) -> c.int ---
 	GetClipboardText :: proc() -> cstring ---
 	HasClipboardText :: proc() -> bool ---
+	SetPrimarySelectionText :: proc(text: cstring) -> c.int ---
+	GetPrimarySelectionText :: proc() -> cstring ---
+	HasPrimarySelectionText :: proc() -> bool ---
 }
 
 
@@ -253,10 +258,14 @@ Sensor :: struct {}
 SensorID :: distinct i32
 
 SensorType :: enum c.int {
-	INVALID = -1,    /**< Returned for an invalid sensor */
-	UNKNOWN,         /**< Unknown sensor type */
-	ACCEL,           /**< Accelerometer */
-	GYRO,            /**< Gyroscope */
+	INVALID = -1,          /**< Returned for an invalid sensor */
+	UNKNOWN,               /**< Unknown sensor type */
+	ACCEL,                 /**< Accelerometer */
+	GYRO,                  /**< Gyroscope */
+	SENSOR_ACCEL_L,        /**< Accelerometer for left Joy-Con controller and Wii nunchuk */
+	SENSOR_GYRO_L,         /**< Gyroscope for left Joy-Con controller */
+	SENSOR_ACCEL_R,        /**< Accelerometer for right Joy-Con controller */
+	SENSOR_GYRO_R,         /**< Gyroscope for right Joy-Con controller */
 }
 
 STANDARD_GRAVITY :: 9.80665
@@ -278,6 +287,7 @@ foreign lib {
 	SensorGetNonPortableType       :: proc(sensor: ^Sensor) -> c.int ---
 	SensorGetInstanceID            :: proc(sensor: ^Sensor) -> SensorID ---
 	SensorGetData                  :: proc(sensor: ^Sensor, data: [^]f32, num_values: c.int) -> c.int ---
+	SensorGetDataWithTimestamp     :: proc(sensor: ^Sensor, timestamp: ^u64, data: [^]f32, num_values: c.int) -> c.int ---
 	SensorClose                    :: proc(sensor: ^Sensor) ---
 	SensorUpdate                   :: proc() ---
 }

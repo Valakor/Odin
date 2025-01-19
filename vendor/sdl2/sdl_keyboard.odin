@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -20,6 +22,7 @@ Keysym :: struct {
 foreign lib {
 	GetKeyboardFocus        :: proc() -> ^Window ---
 	GetKeyboardState        :: proc(numkeys: ^c.int) -> [^]u8 ---
+	ResetKeyboard           :: proc() ---
 	GetKeyFromScancode      :: proc(scancode: Scancode) -> Keycode ---
 	GetScancodeFromKey      :: proc(key: Keycode) -> Scancode ---
 	GetScancodeName         :: proc(scancode: Scancode) -> cstring ---
@@ -29,6 +32,8 @@ foreign lib {
 	StartTextInput          :: proc() ---
 	IsTextInputActive       :: proc() -> bool ---
 	StopTextInput           :: proc() ---
+	ClearComposition        :: proc() ---
+	IsTextInputShown        :: proc() -> bool ---
 	SetTextInputRect        :: proc(rect: ^Rect) ---
 	HasScreenKeyboardSupport:: proc() -> bool ---
 	IsScreenKeyboardShown   :: proc(window: ^Window) -> bool ---

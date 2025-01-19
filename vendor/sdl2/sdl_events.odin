@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -60,6 +62,7 @@ EventType :: enum u32 {
 	KEYMAPCHANGED,          /**< Keymap changed due to a system event such as an
 	                             input language or keyboard layout change.
 	                        */
+	TEXTEDITING_EXT,       /**< Extended keyboard text editing (composition) */
 
 	/* Mouse events */
 	MOUSEMOTION    = 0x400, /**< Mouse moved */
@@ -75,6 +78,7 @@ EventType :: enum u32 {
 	JOYBUTTONUP,            /**< Joystick button released */
 	JOYDEVICEADDED,         /**< A new joystick has been inserted into the system */
 	JOYDEVICEREMOVED,       /**< An opened joystick has been removed */
+	JOYBATTERYUPDATED,      /**< Joystick battery level change */
 
 	/* Game controller events */
 	CONTROLLERAXISMOTION  = 0x650, /**< Game controller axis motion */
@@ -87,6 +91,8 @@ EventType :: enum u32 {
 	CONTROLLERTOUCHPADMOTION,      /**< Game controller touchpad finger was moved */
 	CONTROLLERTOUCHPADUP,          /**< Game controller touchpad finger was lifted */
 	CONTROLLERSENSORUPDATE,        /**< Game controller sensor was updated */
+	CONTROLLERUPDATECOMPLETE_RESERVED_FOR_SDL3,
+	CONTROLLERSTEAMHANDLEUPDATED,  /**< Game controller Steam handle has changed */
 
 	/* Touch events */
 	FINGERDOWN      = 0x700,
@@ -99,7 +105,7 @@ EventType :: enum u32 {
 	MULTIGESTURE,
 
 	/* Clipboard events */
-	CLIPBOARDUPDATE = 0x900, /**< The clipboard changed */
+	CLIPBOARDUPDATE = 0x900, /**< The clipboard or primary selection changed */
 
 	/* Drag and drop events */
 	DROPFILE        = 0x1000, /**< The system requests a file open */
@@ -117,6 +123,9 @@ EventType :: enum u32 {
 	/* Render events */
 	RENDER_TARGETS_RESET = 0x2000, /**< The render targets have been reset and their contents need to be updated */
 	RENDER_DEVICE_RESET, /**< The device has been reset and all textures need to be recreated */
+
+	/* Internal events */
+	POLLSENTINEL = 0x7F00, /**< Signals the end of an event poll cycle */
 
 	/** Events ::SDL_USEREVENT through ::SDL_LASTEVENT are for your use,
 	*  and should be allocated with SDL_RegisterEvents()
@@ -170,10 +179,19 @@ KeyboardEvent :: struct {
 
 TEXTEDITINGEVENT_TEXT_SIZE :: 32
 TextEditingEvent :: struct {
-	type: EventType,                                /**< ::SDL_TEXTEDITING */
+	type: EventType,                          /**< ::SDL_TEXTEDITING */
 	timestamp: u32,                           /**< In milliseconds, populated using SDL_GetTicks() */
 	windowID: u32,                            /**< The window with keyboard focus, if any */
-	text: [TEXTEDITINGEVENT_TEXT_SIZE]u8,  /**< The editing text */
+	text: [TEXTEDITINGEVENT_TEXT_SIZE]u8,     /**< The editing text */
+	start: i32,                               /**< The start cursor of selected editing text */
+	length: i32,                              /**< The length of selected editing text */
+}
+
+TextEditingExtEvent :: struct {
+	type: EventType,                          /**< ::SDL_TEXTEDITING_EXT */
+	timestamp: u32,                           /**< In milliseconds, populated using SDL_GetTicks() */
+	windowID: u32,                            /**< The window with keyboard focus, if any */
+	text: cstring,                            /**< The editing text, which should be freed with SDL_free(), and will not be NULL */
 	start: i32,                               /**< The start cursor of selected editing text */
 	length: i32,                              /**< The length of selected editing text */
 }
@@ -220,6 +238,10 @@ MouseWheelEvent :: struct {
 	x: i32,           /**< The amount scrolled horizontally, positive to the right and negative to the left */
 	y: i32,           /**< The amount scrolled vertically, positive away from the user and negative toward the user */
 	direction: u32,   /**< Set to one of the SDL_MOUSEWHEEL_* defines. When FLIPPED the values in X and Y will be opposite. Multiply by -1 to change them back */
+	preciseX: f32,    /**< The amount scrolled horizontally, positive to the right and negative to the left, with float precision (added in 2.0.18) */
+	preciseY: f32,    /**< The amount scrolled vertically, positive away from the user and negative toward the user, with float precision (added in 2.0.18) */
+	mouseX: i32,      /**< X coordinate, relative to window (added in 2.26.0) */
+	mouseY: i32,      /**< Y coordinate, relative to window (added in 2.26.0) */
 }
 
 JoyAxisEvent :: struct {
@@ -278,6 +300,13 @@ JoyDeviceEvent :: struct {
 	which: i32,       /**< The joystick device index for the ADDED event, instance id for the REMOVED event */
 }
 
+JoyBatteryEvent :: struct {
+    type: EventType,           /**< ::SDL_JOYBATTERYUPDATED */
+    timestamp: u32,            /**< In milliseconds, populated using SDL_GetTicks() */
+    which: JoystickID,         /**< The joystick instance id */
+    level: JoystickPowerLevel, /**< The joystick battery level */
+}
+
 
 ControllerAxisEvent :: struct {
 	type: EventType,        /**< ::SDL_CONTROLLERAXISMOTION */
@@ -304,8 +333,8 @@ ControllerButtonEvent :: struct {
 
 
 ControllerDeviceEvent :: struct {
-	type: EventType,        /**< ::SDL_CONTROLLERDEVICEADDED, ::SDL_CONTROLLERDEVICEREMOVED, or ::SDL_CONTROLLERDEVICEREMAPPED */
-	timestamp: u32,   /**< In milliseconds, populated using SDL_GetTicks() */
+	type: EventType,       /**< ::SDL_CONTROLLERDEVICEADDED, ::SDL_CONTROLLERDEVICEREMOVED, ::SDL_CONTROLLERDEVICEREMAPPED, or ::SDL_CONTROLLERSTEAMHANDLEUPDATED */
+	timestamp: u32,       /**< In milliseconds, populated using SDL_GetTicks() */
 	which:     i32,       /**< The joystick device index for the ADDED event, instance id for the REMOVED or REMAPPED event */
 }
 
@@ -321,11 +350,12 @@ ControllerTouchpadEvent :: struct {
 }
 
 ControllerSensorEvent :: struct {
-	type: EventType,        /**< ::SDL_CONTROLLERSENSORUPDATE */
-	timestamp: u32,   /**< In milliseconds, populated using SDL_GetTicks() */
-	which:     JoystickID, /**< The joystick instance id */
-	sensor:    i32,      /**< The type of the sensor, one of the values of ::SDL_SensorType */
-	data:      [3]f32,      /**< Up to 3 values from the sensor, as defined in SDL_sensor.h */
+	type: EventType,          /**< ::SDL_CONTROLLERSENSORUPDATE */
+	timestamp:    u32,        /**< In milliseconds, populated using SDL_GetTicks() */
+	which:        JoystickID, /**< The joystick instance id */
+	sensor:       i32,        /**< The type of the sensor, one of the values of ::SDL_SensorType */
+	data:         [3]f32,     /**< Up to 3 values from the sensor, as defined in SDL_sensor.h */
+	timestamp_us: u64,        /**< The timestamp of the sensor reading in microseconds, if the hardware provides this information. */
 }
 
 AudioDeviceEvent :: struct {
@@ -390,10 +420,11 @@ DropEvent :: struct {
 
 
 SensorEvent :: struct {
-	type: EventType,        /**< ::SDL_SENSORUPDATE */
-	timestamp: u32,   /**< In milliseconds, populated using SDL_GetTicks() */
-	which:     i32,       /**< The instance ID of the sensor */
-	data:      [6]f32,      /**< Up to 6 values from the sensor - additional values can be queried using SDL_SensorGetData() */
+	type: EventType,         /**< ::SDL_SENSORUPDATE */
+	timestamp:    u32,       /**< In milliseconds, populated using SDL_GetTicks() */
+	which:        i32,       /**< The instance ID of the sensor */
+	data:         [6]f32,    /**< Up to 6 values from the sensor - additional values can be queried using SDL_SensorGetData() */
+	timestamp_us: u64,       /**< The timestamp of the sensor reading in microseconds, if the hardware provides this information. */
 }
 
 QuitEvent :: struct {
@@ -401,10 +432,6 @@ QuitEvent :: struct {
 	timestamp: u32,   /**< In milliseconds, populated using SDL_GetTicks() */
 }
 
-OSEvent :: struct {
-	type: EventType,        /**< ::SDL_QUIT */
-	timestamp: u32,   /**< In milliseconds, populated using SDL_GetTicks() */
-}
 
 UserEvent :: struct {
 	type: EventType,   /**< ::SDL_USEREVENT through ::SDL_LASTEVENT-1 */
@@ -429,6 +456,7 @@ Event :: struct #raw_union {
 	window:    WindowEvent,             /**< Window event data */
 	key:       KeyboardEvent,           /**< Keyboard event data */
 	edit:      TextEditingEvent,        /**< Text editing event data */
+	editExt:   TextEditingExtEvent,     /**< Extended text editing event data */
 	text:      TextInputEvent,          /**< Text input event data */
 	motion:    MouseMotionEvent,        /**< Mouse motion event data */
 	button:    MouseButtonEvent,        /**< Mouse button event data */
@@ -438,6 +466,7 @@ Event :: struct #raw_union {
 	jhat:      JoyHatEvent,             /**< Joystick hat event data */
 	jbutton:   JoyButtonEvent,          /**< Joystick button event data */
 	jdevice:   JoyDeviceEvent,          /**< Joystick device change event data */
+	jbattery:  JoyBatteryEvent,         /**< Joystick battery event data */
 	caxis:     ControllerAxisEvent,     /**< Game Controller axis event data */
 	cbutton:   ControllerButtonEvent,   /**< Game Controller button event data */
 	cdevice:   ControllerDeviceEvent,   /**< Game Controller device event data */

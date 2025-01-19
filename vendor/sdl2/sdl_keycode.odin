@@ -292,6 +292,11 @@ Keycode :: enum i32 {
 
 	AUDIOREWIND = auto_cast (Scancode.AUDIOREWIND|SCANCODE_MASK),
 	AUDIOFASTFORWARD = auto_cast (Scancode.AUDIOFASTFORWARD|SCANCODE_MASK),
+
+	SOFTLEFT = auto_cast (Scancode.SOFTLEFT),
+	SOFTRIGHT = auto_cast (Scancode.SOFTRIGHT),
+	CALL = auto_cast (Scancode.CALL),
+	ENDCALL = auto_cast (Scancode.ENDCALL),
 }
 
 KeymodFlag :: enum u16 {
@@ -306,7 +311,9 @@ KeymodFlag :: enum u16 {
 	NUM      = 0xc,
 	CAPS     = 0xd,
 	MODE     = 0xe,
-	RESERVED = 0xf,
+	SCROLL   = 0xf,
+
+	RESERVED = 0xf, /* This is for source-level compatibility with SDL 2.0.0. */
 }
 
 Keymod :: distinct bit_set[KeymodFlag; u16]
@@ -323,8 +330,9 @@ KMOD_RGUI     :: Keymod{.RGUI}
 KMOD_NUM      :: Keymod{.NUM}
 KMOD_CAPS     :: Keymod{.CAPS}
 KMOD_MODE     :: Keymod{.MODE}
-KMOD_RESERVED :: Keymod{.RESERVED}
+KMOD_SCROLL   :: Keymod{.SCROLL}
 KMOD_CTRL     :: Keymod{.LCTRL, .RCTRL}
 KMOD_SHIFT    :: Keymod{.LSHIFT, .RSHIFT}
 KMOD_ALT      :: Keymod{.LALT, .RALT}
 KMOD_GUI      :: Keymod{.LGUI, .RGUI}
+KMOD_RESERVED :: Keymod{.RESERVED} /* This is for source-level compatibility with SDL 2.0.0. */

@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -35,6 +37,8 @@ foreign lib {
 	HasAVX512F          :: proc() -> bool  ---
 	HasARMSIMD          :: proc() -> bool  ---
 	HasNEON             :: proc() -> bool  ---
+	HasLSX              :: proc() -> bool  ---
+	HasLASX             :: proc() -> bool  ---
 
 	GetSystemRAM        :: proc() -> c.int ---
 

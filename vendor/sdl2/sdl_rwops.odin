@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -15,7 +17,6 @@ RWOPS_STDFILE   :: 2 /**< Stdio file */
 RWOPS_JNIFILE   :: 3 /**< Android asset */
 RWOPS_MEMORY    :: 4 /**< Memory stream */
 RWOPS_MEMORY_RO :: 5 /**< Read-Only memory stream */
-RWOPS_VITAFILE  :: 6 /**< Vita file */
 
 
 /**
@@ -36,14 +37,6 @@ RWops :: struct {
 		windowsio: struct {
 			append: bool,
 			h: rawptr,
-			buffer: struct {
-				data: rawptr,
-				size: c.size_t,
-				left: c.size_t,
-			},
-		},
-		vitaio: struct {
-			h: c.int,
 			buffer: struct {
 				data: rawptr,
 				size: c.size_t,

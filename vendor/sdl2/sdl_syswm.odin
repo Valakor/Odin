@@ -4,6 +4,8 @@ import "core:c"
 
 when ODIN_OS == .Windows {
 	foreign import lib "SDL2.lib"
+} else when ODIN_OS == .Darwin {
+	foreign import lib "system:SDL2.framework"
 } else {
 	foreign import lib "system:SDL2"
 }
@@ -23,6 +25,7 @@ SYSWM_TYPE :: enum c.int {
 	OS2,
 	HAIKU,
 	KMSDRM,
+	RISCOS,
 }
 
 XEvent :: struct {
@@ -85,11 +88,14 @@ SysWMinfo :: struct {
 			resolveFramebuffer: u32, /**< The Framebuffer Object which holds the resolve color Renderbuffer, when MSAA is used. */
 		},
 		wl: struct {
-			display:       rawptr, /**< Wayland display */
-			surface:       rawptr, /**< Wayland surface */
-			shell_surface: rawptr, /**< DEPRECATED Wayland shell_surface (window manager handle) */
-			egl_window:    rawptr, /**< Wayland EGL window (native window) */
-			xdg_surface:   rawptr, /**< Wayland xdg surface (window manager handle) */
+			display:         rawptr, /**< Wayland display */
+			surface:         rawptr, /**< Wayland surface */
+			shell_surface:   rawptr, /**< DEPRECATED Wayland shell_surface (window manager handle) */
+			egl_window:      rawptr, /**< Wayland EGL window (native window) */
+			xdg_surface:     rawptr, /**< Wayland xdg surface (window manager handle) */
+			xdg_toplevel:    rawptr, /**< Wayland xdg toplevel role */
+			xdg_popup:       rawptr, /**< Wayland xdg popup role */
+			xdg_positioner:  rawptr, /**< Wayland xdg positioner, for popup */
 		},
 		mir: struct {
 			connection: rawptr,  /**< Mir display server connection */

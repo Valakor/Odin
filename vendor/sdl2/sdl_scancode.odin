@@ -126,16 +126,16 @@ Scancode :: enum c.int {
 	F23 = 114,
 	F24 = 115,
 	EXECUTE = 116,
-	HELP = 117,
-	MENU = 118,
+	HELP = 117,    /**< AL Integrated Help Center */
+	MENU = 118,    /**< Menu (show menu) */
 	SELECT = 119,
-	STOP = 120,
-	AGAIN = 121,
-	UNDO = 122,
-	CUT = 123,
-	COPY = 124,
-	PASTE = 125,
-	FIND = 126,
+	STOP = 120,    /**< AC Stop */
+	AGAIN = 121,   /**< AC Redo/Repeat */
+	UNDO = 122,    /**< AC Undo */
+	CUT = 123,     /**< AC Cut */
+	COPY = 124,    /**< AC Copy */
+	PASTE = 125,   /**< AC Paste */
+	FIND = 126,    /**< AC Find */
 	MUTE = 127,
 	VOLUMEUP = 128,
 	VOLUMEDOWN = 129,
@@ -165,9 +165,9 @@ Scancode :: enum c.int {
 	LANG8 = 151,
 	LANG9 = 152,
 
-	ALTERASE = 153,
+	ALTERASE = 153, /**< Erase-Eaze */
 	SYSREQ = 154,
-	CANCEL = 155,
+	CANCEL = 155,   /**< AC Cancel */
 	CLEAR = 156,
 	PRIOR = 157,
 	RETURN2 = 158,
@@ -242,17 +242,17 @@ Scancode :: enum c.int {
 	AUDIOPLAY = 261,
 	AUDIOMUTE = 262,
 	MEDIASELECT = 263,
-	WWW = 264,
+	WWW = 264,             /**< AL Internet Browser */
 	MAIL = 265,
-	CALCULATOR = 266,
+	CALCULATOR = 266,      /**< AL Calculator */
 	COMPUTER = 267,
-	AC_SEARCH = 268,
-	AC_HOME = 269,
-	AC_BACK = 270,
-	AC_FORWARD = 271,
-	AC_STOP = 272,
-	AC_REFRESH = 273,
-	AC_BOOKMARKS = 274,
+	AC_SEARCH = 268,       /**< AC Search */
+	AC_HOME = 269,         /**< AC Home */
+	AC_BACK = 270,         /**< AC Back */
+	AC_FORWARD = 271,      /**< AC Forward */
+	AC_STOP = 272,         /**< AC Stop */
+	AC_REFRESH = 273,      /**< AC Refresh */
+	AC_BOOKMARKS = 274,    /**< AC Bookmarks */
 
 
 	BRIGHTNESSDOWN = 275,
@@ -262,13 +262,24 @@ Scancode :: enum c.int {
 	KBDILLUMDOWN = 279,
 	KBDILLUMUP = 280,
 	EJECT = 281,
-	SLEEP = 282,
+	SLEEP = 282,           /**< SC System Sleep */
 
 	APP1 = 283,
 	APP2 = 284,
 
 	AUDIOREWIND = 285,
 	AUDIOFASTFORWARD = 286,
+
+	SOFTLEFT = 287, /**< Usually situated below the display on phones and
+                         used as a multi-function feature key for selecting
+                         a software defined function shown on the bottom left
+                         of the display. */
+	SOFTRIGHT = 288, /**< Usually situated below the display on phones and
+                          used as a multi-function feature key for selecting
+                          a software defined function shown on the bottom right
+                          of the display. */
+	CALL = 289,      /**< Used for accepting phone calls. */
+	ENDCALL = 290,   /**< Used for rejecting phone calls. */
 
 	NUM_SCANCODES = 512,
 }
