@@ -472,6 +472,7 @@ struct BuildContext {
 	bool   ignore_microsoft_magic;
 	bool   linker_map_file;
 
+	bool   use_single_module;
 	bool   use_separate_modules;
 	bool   module_per_file;
 	bool   cached;
@@ -1719,13 +1720,15 @@ gb_internal void init_build_context(TargetMetrics *cross_target, Subtarget subta
 
 	bc->optimization_level = gb_clamp(bc->optimization_level, -1, 3);
 
-#if defined(GB_SYSTEM_WINDOWS)
 	if (bc->optimization_level <= 0) {
 		if (!is_arch_wasm()) {
 			bc->use_separate_modules = true;
 		}
 	}
-#endif
+
+	if (build_context.use_single_module) {
+		bc->use_separate_modules = false;
+	}
 
 
 	// TODO: Static map calls are bugged on `amd64sysv` abi.

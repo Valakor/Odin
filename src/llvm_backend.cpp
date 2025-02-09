@@ -169,11 +169,17 @@ gb_internal void lb_correct_entity_linkage(lbGenerator *gen) {
 			other_global = LLVMGetNamedGlobal(ec.other_module->mod, ec.cname);
 			if (other_global) {
 				LLVMSetLinkage(other_global, LLVMWeakAnyLinkage);
+				if (!ec.e->Variable.is_export) {
+					LLVMSetVisibility(other_global, LLVMHiddenVisibility);
+				}
 			}
 		} else if (ec.e->kind == Entity_Procedure) {
 			other_global = LLVMGetNamedFunction(ec.other_module->mod, ec.cname);
 			if (other_global) {
 				LLVMSetLinkage(other_global, LLVMWeakAnyLinkage);
+				if (!ec.e->Procedure.is_export) {
+					LLVMSetVisibility(other_global, LLVMHiddenVisibility);
+				}
 			}
 		}
 	}
@@ -1147,14 +1153,14 @@ gb_internal void lb_finalize_objc_names(lbProcedure *p) {
 		String name = entry.key;
 		args[0] = lb_const_value(m, t_cstring, exact_value_string(name));
 		lbValue ptr = lb_emit_runtime_call(p, "objc_lookUpClass", args);
-		lb_addr_store(p, entry.value, ptr);
+		lb_addr_store(p, entry.value.local_module_addr, ptr);
 	}
 
 	for (auto const &entry : m->objc_selectors) {
 		String name = entry.key;
 		args[0] = lb_const_value(m, t_cstring, exact_value_string(name));
 		lbValue ptr = lb_emit_runtime_call(p, "sel_registerName", args);
-		lb_addr_store(p, entry.value, ptr);
+		lb_addr_store(p, entry.value.local_module_addr, ptr);
 	}
 
 	lb_end_procedure_body(p);

@@ -1801,6 +1801,27 @@ gb_internal bool is_type_union_maybe_pointer_original_alignment(Type *t) {
 }
 
 
+enum TypeEndianKind {
+	TypeEndian_Platform,
+	TypeEndian_Little,
+	TypeEndian_Big,
+};
+
+gb_internal TypeEndianKind type_endian_kind_of(Type *t) {
+	t = core_type(t);
+	if (t->kind == Type_Basic) {
+		if (t->Basic.flags & BasicFlag_EndianLittle) {
+			return TypeEndian_Little;
+		}
+		if (t->Basic.flags & BasicFlag_EndianBig) {
+			return TypeEndian_Big;
+		}
+	} else if (t->kind == Type_BitSet) {
+		return type_endian_kind_of(bit_set_to_int(t));
+	}
+	return TypeEndian_Platform;
+}
+
 
 gb_internal bool is_type_endian_big(Type *t) {
 	t = core_type(t);
@@ -4773,7 +4794,9 @@ gb_internal gbString write_type_to_string(gbString str, Type *type, bool shortha
 
 	case Type_BitSet:
 		str = gb_string_appendc(str, "bit_set[");
-		if (is_type_enum(type->BitSet.elem)) {
+		if (type->BitSet.elem == nullptr) {
+			str = gb_string_appendc(str, "<unresolved>");
+		} else if (is_type_enum(type->BitSet.elem)) {
 			str = write_type_to_string(str, type->BitSet.elem);
 		} else {
 			str = gb_string_append_fmt(str, "%lld", type->BitSet.lower);

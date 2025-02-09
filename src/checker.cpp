@@ -5016,6 +5016,9 @@ gb_internal DECL_ATTRIBUTE_PROC(foreign_import_decl_attribute) {
 			error(elem, "Expected a string value for '%.*s'", LIT(name));
 		}
 		return true;
+	} else if (name == "export") {
+		ac->is_export = true;
+		return true;
 	} else if (name == "force" || name == "require") {
 		if (value != nullptr) {
 			error(elem, "Expected no parameter for '%.*s'", LIT(name));
@@ -5039,6 +5042,12 @@ gb_internal DECL_ATTRIBUTE_PROC(foreign_import_decl_attribute) {
 		} else {
 			ac->extra_linker_flags = ev.value_string;
 		}
+		return true;
+	} else if (name == "ignore_duplicates") {
+		if (value != nullptr) {
+			error(elem, "Expected no parameter for '%.*s'", LIT(name));
+		}
+		ac->ignore_duplicates = true;
 		return true;
 	}
 	return false;
@@ -5175,20 +5184,30 @@ gb_internal void check_add_foreign_import_decl(CheckerContext *ctx, Ast *decl) {
 	GB_ASSERT(fl->library_name.pos.line != 0);
 	fl->library_name.string = library_name;
 
+	AttributeContext ac = {};
+	check_decl_attributes(ctx, fl->attributes, foreign_import_decl_attribute, &ac);
+
+	Scope *scope = parent_scope;
+	if (ac.is_export) {
+		scope = parent_scope->parent;
+	}
+
 	Entity *e = alloc_entity_library_name(parent_scope, fl->library_name, t_invalid,
 	                                      fl->fullpaths, library_name);
 	e->LibraryName.decl = decl;
 	add_entity_flags_from_file(ctx, e, parent_scope);
-	add_entity(ctx, parent_scope, nullptr, e);
+	add_entity(ctx, scope, nullptr, e);
 
-	AttributeContext ac = {};
-	check_decl_attributes(ctx, fl->attributes, foreign_import_decl_attribute, &ac);
+
 	if (ac.require_declaration) {
 		mpsc_enqueue(&ctx->info->required_foreign_imports_through_force_queue, e);
 		add_entity_use(ctx, nullptr, e);
 	}
 	if (ac.foreign_import_priority_index != 0) {
 		e->LibraryName.priority_index = ac.foreign_import_priority_index;
+	}
+	if (ac.ignore_duplicates) {
+		e->LibraryName.ignore_duplicates = true;
 	}
 	String extra_linker_flags = string_trim_whitespace(ac.extra_linker_flags);
 	if (extra_linker_flags.len != 0) {
@@ -6300,6 +6319,10 @@ gb_internal void check_deferred_procedures(Checker *c) {
 					continue;
 				}
 
+				if (dst_params == nullptr) {
+					error(src->token, "Deferred procedure must have parameters for %s", attribute);
+					continue;
+				}
 				GB_ASSERT(dst_params->kind == Type_Tuple);
 
 				Type *tsrc = alloc_type_tuple();

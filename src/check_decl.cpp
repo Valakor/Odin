@@ -60,7 +60,7 @@ gb_internal Type *check_init_variable(CheckerContext *ctx, Entity *e, Operand *o
 				error(operand->expr, "Cannot assign a type '%s' to variable '%.*s'", t, LIT(e->token.string));
 			}
 			if (e->type == nullptr) {
-				error_line("\tThe type of the variable '%.*s' cannot be inferred as a type does not have a default type\n", LIT(e->token.string));
+				error_line("\tThe type of the variable '%.*s' cannot be inferred as a type and does not have a default type\n", LIT(e->token.string));
 			}
 			e->type = operand->type;
 			return nullptr;
@@ -857,6 +857,7 @@ gb_internal Entity *init_entity_foreign_library(CheckerContext *ctx, Entity *e) 
 	} else {
 		String name = ident->Ident.token.string;
 		Entity *found = scope_lookup(ctx->scope, name);
+
 		if (found == nullptr) {
 			if (is_blank_ident(name)) {
 				// NOTE(bill): link against nothing
